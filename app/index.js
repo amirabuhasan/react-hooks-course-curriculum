@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Route, Switch } from 'react-router-dom'
 import { ThemeProvider } from './contexts/theme'
 import Loading from './components/Loading'
 import Nav from './components/Nav'
+import "regenerator-runtime/runtime.js";
 
 const Posts = React.lazy(() => import('./components/Posts'))
 const Post = React.lazy(() => import('./components/Post'))
