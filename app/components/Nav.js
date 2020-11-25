@@ -1,5 +1,4 @@
 import React, { useContext } from 'react'
-import { ThemeConsumer } from '../contexts/theme'
 import { NavLink } from 'react-router-dom'
 import ThemeContext from '../contexts/theme'
 
