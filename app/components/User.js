@@ -1,64 +1,81 @@
-import React from 'react'
+import React, { useState, useEffect, useReducer } from 'react'
 import queryString from 'query-string'
 import { fetchUser, fetchPosts } from '../utils/api'
 import Loading from './Loading'
 import { formatDate } from '../utils/helpers'
 import PostsList from './PostsList'
 
-export default class User extends React.Component {
-  state = {
-    user: null,
-    loadingUser: true,
-    posts: null,
-    loadingPosts: true,
-    error: null,
+const userReducer = (state, action) => {
+  switch (action.type) {
+    case 'fetchUser':
+      return {
+        ...state,
+        user: action.user
+      }
+    case 'fetchPosts':
+      return {
+        ...state,
+        posts: action.posts
+      }
+    case 'error':
+      return {
+        ...state,
+        posts: null,
+        user: null,
+        error: action.error
+      }
   }
-  componentDidMount() {
-    const { id } = queryString.parse(this.props.location.search)
+}
 
-    fetchUser(id)
-      .then((user) => {
-        this.setState({ user, loadingUser: false})
+const initialState = {
+  user: null,
+  posts: null,
+  error: null,
+}
 
-        return fetchPosts(user.submitted.slice(0, 30))
-      })
-      .then((posts) => this.setState({
-        posts,
-        loadingPosts: false,
-        error: null
-      }))
-      .catch(({ message }) => this.setState({
-        error: message,
-        loadingUser: false,
-        loadingPosts: false
-      }))
-  }
-  render() {
-    const { user, posts, loadingUser, loadingPosts, error } = this.state
+export default function User({ location }) {
+  const [state, dispatch] = useReducer(userReducer, initialState);
+  const { id } = queryString.parse(location.search)
+  const { user, posts, error } = state;
+  const loadingUser = user === null;
+  const loadingPosts = posts === null;
 
-    if (error) {
+  useEffect(() => {
+    const handleFetchData = async () => {
+      try {
+        const user = await fetchUser(id);
+        dispatch({ type: 'fetchUser', user })
+        const posts = await fetchPosts(user.submitted.slice(0, 30));
+        dispatch({ type: 'fetchPosts', posts })
+      } catch({ message }) {
+        dispatch({ type: 'error', error: message })
+      }
+    }
+    handleFetchData()
+  }, [id])
+
+  if (error) {
       return <p className='center-text error'>{error}</p>
     }
 
-    return (
-      <React.Fragment>
-        {loadingUser === true
-          ? <Loading text='Fetching User' />
-          : <React.Fragment>
-              <h1 className='header'>{user.id}</h1>
-              <div className='meta-info-light'>
-                <span>joined <b>{formatDate(user.created)}</b></span>
-                <span>has <b>{user.karma.toLocaleString()}</b> karma</span>
-              </div>
-              <p dangerouslySetInnerHTML={{__html: user.about}} />
-            </React.Fragment>}
-        {loadingPosts === true
-          ? loadingUser === false && <Loading text='Fetching posts'/>
-          : <React.Fragment>
-              <h2>Posts</h2>
-              <PostsList posts={posts} />
-            </React.Fragment>}
-      </React.Fragment>
-    )
-  }
+  return (
+    <React.Fragment>
+      {loadingUser === true
+        ? <Loading text='Fetching User' />
+        : <React.Fragment>
+            <h1 className='header'>{user.id}</h1>
+            <div className='meta-info-light'>
+              <span>joined <b>{formatDate(user.created)}</b></span>
+              <span>has <b>{user.karma.toLocaleString()}</b> karma</span>
+            </div>
+            <p dangerouslySetInnerHTML={{__html: user.about}} />
+          </React.Fragment>}
+      {loadingPosts === true
+        ? loadingUser === false && <Loading text='Fetching posts'/>
+        : <React.Fragment>
+            <h2>Posts</h2>
+            <PostsList posts={posts} />
+          </React.Fragment>}
+    </React.Fragment>
+  )
 }
