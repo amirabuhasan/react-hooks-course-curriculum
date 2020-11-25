@@ -7,6 +7,12 @@ import PostsList from './PostsList'
 
 const userReducer = (state, action) => {
   switch (action.type) {
+    case 'fetch':
+      return {
+        ...state,
+        user: null,
+        posts: null
+      }
     case 'fetchUser':
       return {
         ...state,
@@ -42,6 +48,7 @@ export default function User({ location }) {
 
   useEffect(() => {
     const handleFetchData = async () => {
+      dispatch({ type: 'fetch' })
       try {
         const user = await fetchUser(id);
         dispatch({ type: 'fetchUser', user })
