@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useReducer } from 'react'
+import React, { useEffect, useReducer } from 'react'
 import queryString from 'query-string'
 import { fetchUser, fetchPosts } from '../utils/api'
 import Loading from './Loading'
